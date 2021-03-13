@@ -10,7 +10,10 @@ import (
 )
 
 type UserProcess struct {
+	// 连接
 	Conn net.Conn
+	// 用户ID
+	UserID int
 }
 
 // 处理注册mes
@@ -89,7 +92,21 @@ func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 		}
 	} else {
 		loginResMes.Code = 200 // 登录成功
-		fmt.Println(user)
+		// 用户登录成功  更行onlineUsers
+		// 为up加入UserID
+		up.UserID = loginMes.UserID
+		userMgr.AddOnlineUser(up)
+
+		loginResMes.UserName = user.UserName
+
+		// fmt.Println(user)
+		for id, _ := range userMgr.onlineUsers {
+			if id == user.UserID {
+				continue
+			}
+			loginResMes.OnlineUsersID = append(loginResMes.OnlineUsersID, id)
+		}
+
 	}
 
 	// 3.序列化

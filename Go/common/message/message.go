@@ -26,8 +26,10 @@ type LoginMes struct {
 
 // LoginResMes : 登录结果返回消息
 type LoginResMes struct {
-	Code  int    `json:"code"`  // 状态码
-	Error string `json:"error"` // 放回错误信息
+	Code          int    `json:"code"`        // 状态码
+	UserName      string `json:"userName"`    // 用户昵称
+	OnlineUsersID []int  `json:"onlineUsers"` // 在线用户
+	Error         string `json:"error"`       // 返回错误信息
 }
 
 // RegisterMes :注册消息

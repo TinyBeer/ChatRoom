@@ -121,13 +121,18 @@ func (up *UserProcess) Login(userID int, userPwd string) (err error) {
 		return
 	}
 	if loginResMes.Code == 200 {
-
+		// 可以显示当前在线用户id列表
+		fmt.Println("当前在线用户列表如下:")
+		for _, onlineUserID := range loginResMes.OnlineUsersID {
+			fmt.Printf("用户id:%d\t\n", onlineUserID)
+		}
+		fmt.Println()
 		// 启一个协程保持和服务器的练习
 		go serverMesProcess(conn)
 
 		// 1.显示二级菜单
 		for {
-			ShowMenu()
+			ShowMenu(loginResMes.UserName)
 		}
 
 	} else {

@@ -6,9 +6,9 @@ import (
 )
 
 // 显示登录成功后的界面
-func ShowMenu() {
+func ShowMenu(userName string) {
 
-	fmt.Println("----恭喜xxx登录成功-----")
+	fmt.Printf("----恭喜%3s登录成功-----\n", userName)
 	fmt.Println("----1：在线用户列表-----")
 	fmt.Println("----2：发送消息---------")
 	fmt.Println("----3：信息列表---------")
