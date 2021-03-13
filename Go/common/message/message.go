@@ -20,6 +20,8 @@ var (
 	NotifyUserStatusMesType = "NotifyUserStatusMes"
 	// SmsMesType 短消息类型
 	SmsMesType = "SmsMes"
+	// LogoutMesType 登出消息
+	LogoutMesType = "LogoutMes"
 )
 
 // Message ：消息类型
@@ -64,4 +66,9 @@ type NotifyUserStatusMes struct {
 type SmsMes struct {
 	Content string `json:"content"`
 	User           // 匿名结构体
+}
+
+// LogoutMes
+type LogoutMes struct {
+	User // 匿名结构体
 }

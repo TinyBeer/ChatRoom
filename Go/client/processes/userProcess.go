@@ -71,6 +71,26 @@ func (up *UserProcess) Register(userID int, userPwd, userName string) (err error
 	return
 }
 
+func (up *UserProcess) Logout() {
+
+	// 1.创建mes
+	var mes message.Message
+	mes.Type = message.LogoutMesType
+	// 2.创建logoutMes
+	var logoutMes message.LogoutMes
+	logoutMes.User = CurUser.User
+	// 3.封包
+	data, err := json.Marshal(&logoutMes)
+	if err != nil {
+		fmt.Println("json.Marshal failed, err=", err.Error())
+		return
+	}
+	mes.Data = string(data)
+	// 4.发送
+	tf := utils.NewTransfer(CurUser.Conn)
+	tf.WritePkg(&mes)
+}
+
 func (up *UserProcess) Login(userID int, userPwd string) (err error) {
 	// 1.连接到服务器
 	conn, err := net.Dial("tcp", "192.168.68.166:8889")
@@ -78,7 +98,10 @@ func (up *UserProcess) Login(userID int, userPwd string) (err error) {
 		return err
 	}
 	// 延迟断开
-	defer conn.Close()
+	defer func() {
+		fmt.Println("清理net.Conn")
+		conn.Close()
+	}()
 
 	// 2.准备通过conn发送消息
 	var mes message.Message
@@ -143,9 +166,7 @@ func (up *UserProcess) Login(userID int, userPwd string) (err error) {
 		go serverMesProcess(conn)
 
 		// 1.显示二级菜单
-		for {
-			ShowMenu(loginResMes.UserName)
-		}
+		ShowMenu(loginResMes.UserName)
 
 	} else {
 		fmt.Println(loginResMes.Error)

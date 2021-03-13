@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
 )
 
 // 显示登录成功后的界面
@@ -24,23 +23,27 @@ func ShowMenu(userName string) {
 
 	// 总会使用SmsProcess
 	smsProcess := &SmsProcess{}
-	fmt.Scanln(&key)
-	switch key {
-	case 1:
-		// fmt.Println("显示在线用户列表")
-		outputOnlineUsers()
-	case 2:
-		fmt.Println("请输入要发送的消息:")
-		fmt.Scanf("%s\n", &content)
-		smsProcess.SendGroupMes(content)
-	case 3:
-		fmt.Println("信息列表")
-	case 4:
-		fmt.Print("退出系统")
-		os.Exit(0)
-	default:
-		fmt.Println("输入有误，从新输入：")
+	for {
+		fmt.Scanln(&key)
+		switch key {
+		case 1:
+			// fmt.Println("显示在线用户列表")
+			outputOnlineUsers()
+		case 2:
+			fmt.Println("请输入要发送的消息:")
+			fmt.Scanf("%s\n", &content)
+			smsProcess.SendGroupMes(content)
+		case 3:
+			fmt.Println("信息列表")
+		case 4:
+			fmt.Print("退出系统")
+			up := &UserProcess{}
+			up.Logout()
+			return
+		default:
+			fmt.Println("输入有误，从新输入：")
 
+		}
 	}
 
 }
@@ -59,7 +62,7 @@ func serverMesProcess(conn net.Conn) {
 
 		switch mes.Type {
 		case message.NotifyUserStatusMesType:
-			// 处理用户上上线消息
+			// 处理用户状态更新消息
 			// 取出NotifyUserStatusMes
 			var notifyUserStatusMes message.NotifyUserStatusMes
 			// 反序列化

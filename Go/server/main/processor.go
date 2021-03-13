@@ -27,6 +27,10 @@ func (pro *Processor) serverProcess(mes *message.Message) (err error) {
 	case message.SmsMesType:
 		smsProcess := &processes.SmsProcess{}
 		smsProcess.SendGroupMes(mes)
+	case message.LogoutMesType:
+		up := &processes.UserProcess{Conn: pro.Conn}
+		up.ServerProcessLogout(mes)
+		return errors.New("用户登出")
 	default:
 		err = errors.New("未知消息类型")
 	}
@@ -47,14 +51,13 @@ func (pro *Processor) Process2() (err error) {
 				fmt.Println("客户端断开连接")
 			default:
 				fmt.Println("客户端连接中断")
-
 			}
 			return err
 		}
 
 		err = pro.serverProcess(&mes)
 		if err != nil {
-			fmt.Println("通讯协程错误， err=", err.Error())
+			fmt.Println("通讯协程断开， err=", err.Error())
 		}
 	}
 }

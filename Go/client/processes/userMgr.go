@@ -21,15 +21,26 @@ func outputOnlineUsers() {
 
 // 编写一个方法  处理返回的 NotifyUsersStatusMes
 func updateUserStatus(notifyUserStatusMes *message.NotifyUserStatusMes) {
+	// 查询在线用户列表
 	user, ok := onlineUsers[notifyUserStatusMes.UserID]
-
 	if !ok {
-		onlineUsers[notifyUserStatusMes.UserID] = &message.User{
-			UserID:     notifyUserStatusMes.UserID,
-			UserStatus: notifyUserStatusMes.UserStatus,
+		// 用户在在线用户列表
+		if notifyUserStatusMes.UserStatus != message.USER_OFFLINE {
+			// 非下线通知 则更向在线用户列表添加用户
+			onlineUsers[notifyUserStatusMes.UserID] = &message.User{
+				UserID:     notifyUserStatusMes.UserID,
+				UserStatus: notifyUserStatusMes.UserStatus,
+			}
 		}
-	} else {
-		user.UserStatus = notifyUserStatusMes.UserStatus
-	}
 
+	} else {
+		// 用户不在在线用户列表
+		if notifyUserStatusMes.UserStatus == message.USER_OFFLINE {
+			// 用户下线 则将用户从在线用户列表中移除
+			delete(onlineUsers, notifyUserStatusMes.UserID)
+		} else {
+			// 非下线通知 则更新用户状态
+			user.UserStatus = notifyUserStatusMes.UserStatus
+		}
+	}
 }

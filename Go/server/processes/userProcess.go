@@ -16,6 +16,64 @@ type UserProcess struct {
 	UserID int
 }
 
+// 处理登录mes
+func (up *UserProcess) ServerProcessLogout(mes *message.Message) (err error) {
+	// 1.先取出mes.Data，并反序列化
+	var logoutMes message.LogoutMes
+	err = json.Unmarshal([]byte(mes.Data), &logoutMes)
+	if err != nil {
+		return
+	}
+	// 删除map中断 对应数据
+	delete(userMgr.onlineUsers, logoutMes.UserID)
+	// 通知用户下线
+	up.NotifyOthersOffline(logoutMes.UserID)
+	fmt.Printf("用户%d下线\n", logoutMes.UserID)
+	return
+}
+
+// 编写通知用户下线的方法
+func (up *UserProcess) NotifyOthersOffline(userId int) (err error) {
+	// 遍历onlineUsers  一个一个发送消息
+	for id, up := range userMgr.onlineUsers {
+		if id == userId {
+			continue
+		}
+		// 开始通知下线
+		up.NotifyMeOffline(userId)
+	}
+	return
+}
+
+func (up *UserProcess) NotifyMeOffline(userId int) {
+	// 开始组装NotifyUserStatusMes
+	var mes message.Message
+	mes.Type = message.NotifyUserStatusMesType
+
+	var notifyUserStatusMes message.NotifyUserStatusMes
+	notifyUserStatusMes.UserID = userId
+	notifyUserStatusMes.UserStatus = message.USER_OFFLINE
+
+	// 序列换
+	data, err := json.Marshal(&notifyUserStatusMes)
+	if err != nil {
+		fmt.Println("json.Marshal failed, err=", err.Error())
+		return
+	}
+
+	// 装填到mes包
+	mes.Data = string(data)
+
+	// 传输mes
+	tf := utils.NewTransfer(up.Conn)
+
+	err = tf.WritePkg(&mes)
+	if err != nil {
+		fmt.Println("tf.WritePkg failed, err=", err.Error())
+		return
+	}
+}
+
 // 编写通知用户在线的方法
 func (up *UserProcess) NotifyOthersOnline(userId int) (err error) {
 	// 遍历onlineUsers  一个一个发送消息
