@@ -4,7 +4,6 @@ import (
 	"ChartRoom/common/message"
 	"ChartRoom/common/utils"
 	"ChartRoom/server/model"
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -20,7 +19,7 @@ type UserProcess struct {
 func (up *UserProcess) ServerProcessLogout(mes *message.Message) (err error) {
 	// 1.先取出mes.Data，并反序列化
 	var logoutMes message.LogoutMes
-	err = json.Unmarshal([]byte(mes.Data), &logoutMes)
+	err = utils.Unpack(mes, &logoutMes)
 	if err != nil {
 		return
 	}
@@ -54,15 +53,12 @@ func (up *UserProcess) NotifyMeOffline(userId int) {
 	notifyUserStatusMes.UserID = userId
 	notifyUserStatusMes.UserStatus = message.USER_OFFLINE
 
-	// 序列换
-	data, err := json.Marshal(&notifyUserStatusMes)
+	// 封包
+	err := utils.Pack(&mes, &notifyUserStatusMes)
 	if err != nil {
-		fmt.Println("json.Marshal failed, err=", err.Error())
+		fmt.Println("Pack failed, err=", err.Error())
 		return
 	}
-
-	// 装填到mes包
-	mes.Data = string(data)
 
 	// 传输mes
 	tf := utils.NewTransfer(up.Conn)
@@ -98,15 +94,12 @@ func (up *UserProcess) NotifyMeOnline(userId int) {
 	notifyUserStatusMes.UserID = userId
 	notifyUserStatusMes.UserStatus = message.USER_ONLINE
 
-	// 序列换
-	data, err := json.Marshal(&notifyUserStatusMes)
+	// 封包
+	err := utils.Pack(&mes, &notifyUserStatusMes)
 	if err != nil {
-		fmt.Println("json.Marshal failed, err=", err.Error())
+		fmt.Println("Pack failed, err=", err.Error())
 		return
 	}
-
-	// 装填到mes包
-	mes.Data = string(data)
 
 	// 传输mes
 	tf := utils.NewTransfer(up.Conn)
@@ -121,7 +114,7 @@ func (up *UserProcess) NotifyMeOnline(userId int) {
 // 处理注册mes
 func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) {
 	var registerMes message.RegisterMes
-	err = json.Unmarshal([]byte(mes.Data), &registerMes)
+	err = utils.Unpack(mes, &registerMes)
 	if err != nil {
 		return
 	}
@@ -147,15 +140,12 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 		registerResMes.Code = 200
 	}
 
-	// 3.序列化
-	data, err := json.Marshal(&registerResMes)
+	// 3.封包
+	err = utils.Pack(&resMes, &registerResMes)
 	if err != nil {
-		fmt.Println("json.Marshal failed, err=", err)
+		fmt.Println("Pack failed, err=", err)
 		return
 	}
-
-	// 4.将data赋值给mes.Data
-	resMes.Data = string(data)
 
 	// 使用Transfer返回resMes
 	tf := utils.NewTransfer(up.Conn)
@@ -167,7 +157,7 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	// 1.先取出mes.Data，并反序列化
 	var loginMes message.LoginMes
-	err = json.Unmarshal([]byte(mes.Data), &loginMes)
+	err = utils.Unpack(mes, &loginMes)
 	if err != nil {
 		return
 	}
@@ -214,14 +204,11 @@ func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	}
 
 	// 3.序列化
-	data, err := json.Marshal(&loginResMes)
+	err = utils.Pack(&resMes, &loginResMes)
 	if err != nil {
-		fmt.Println("json.Marshal failed, err=", err)
+		fmt.Println("Pack failed, err=", err)
 		return
 	}
-
-	// 4.将data赋值给mes.Data
-	resMes.Data = string(data)
 
 	// 使用Transfer返回resMes
 	tf := utils.NewTransfer(up.Conn)

@@ -3,9 +3,9 @@ package processes
 import (
 	"ChartRoom/common/message"
 	"ChartRoom/common/utils"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 )
 
@@ -32,15 +32,12 @@ func (up *UserProcess) Register(userID int, userPwd, userName string) (err error
 	registerMes.User.UserPwd = userPwd
 	registerMes.User.UserName = userName
 
-	// 4.序列化loginMes
-	data, err := json.Marshal(&registerMes)
+	// 封包
+	err = utils.Pack(&mes, &registerMes)
+
 	if err != nil {
-		// fmt.Println("json.Marshal failed, err=", err.Error())
 		return err
 	}
-
-	// 5.填充mes.Data
-	mes.Data = string(data)
 
 	// 使用Transfer发送数据
 	tf := utils.NewTransfer(conn)
@@ -56,18 +53,16 @@ func (up *UserProcess) Register(userID int, userPwd, userName string) (err error
 		return
 	}
 
-	// 反序列化 resMes.Data
+	// 解包
 	var registerResMes message.RegisterResMes
-	err = json.Unmarshal([]byte(resMes.Data), &registerResMes)
+	err = utils.Unpack(&resMes, &registerResMes)
 	if err != nil {
-		fmt.Println("json.Umarshal failed, err=", err.Error())
+		log.Println("Unpack failed, err=", err.Error())
 		return
 	}
 
-	if registerResMes.Code == 200 {
-		fmt.Println("注册成功，来请登录吧")
-	} else {
-		fmt.Println(registerResMes.Error)
+	if registerResMes.Code != 200 {
+		err = errors.New(registerResMes.Error)
 	}
 	return
 }
@@ -81,12 +76,12 @@ func (up *UserProcess) Logout() {
 	var logoutMes message.LogoutMes
 	logoutMes.User = CurUser.User
 	// 3.封包
-	data, err := json.Marshal(&logoutMes)
+	err := utils.Pack(&mes, &logoutMes)
 	if err != nil {
-		fmt.Println("json.Marshal failed, err=", err.Error())
+		fmt.Println("Pack failed, err=", err.Error())
 		return
 	}
-	mes.Data = string(data)
+
 	// 4.发送
 	tf := utils.NewTransfer(CurUser.Conn)
 	tf.WritePkg(&mes)
@@ -98,11 +93,6 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 	if err != nil {
 		return
 	}
-	// // 延迟断开
-	// defer func() {
-	// 	fmt.Println("清理net.Conn")
-	// 	conn.Close()
-	// }()
 
 	// 2.准备通过conn发送消息
 	var mes message.Message
@@ -113,15 +103,8 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 	loginMes.UserID = userID
 	loginMes.UserPwd = userPwd
 
-	// 4.序列化loginMes
-	data, err := json.Marshal(&loginMes)
-	if err != nil {
-		// fmt.Println("json.Marshal failed, err=", err.Error())
-		return
-	}
-
-	// 5.填充mes.Data
-	mes.Data = string(data)
+	// 4.封包
+	err = utils.Pack(&mes, &loginMes)
 
 	// 使用Transfer发送数据
 	tf := utils.NewTransfer(conn)
@@ -137,11 +120,11 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 		// fmt.Println("err=", err.Error())
 		return
 	}
-	// 反序列化 resMes.Data
+	// 解包
 	var loginResMes message.LoginResMes
-	err = json.Unmarshal([]byte(resMes.Data), &loginResMes)
+	err = utils.Unpack(&resMes, &loginResMes)
 	if err != nil {
-		fmt.Println("json.Umarshal failed, err=", err.Error())
+		fmt.Println("Unpack failed, err=", err.Error())
 		return
 	}
 	if loginResMes.Code == 200 {
@@ -151,10 +134,8 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 		CurUser.UserName = loginResMes.UserName
 		CurUser.UserStatus = message.USER_ONLINE
 
-		// 可以显示当前在线用户id列表
-		fmt.Println("当前在线用户列表如下:")
+		// 初始化在线用户列表
 		for _, onlineUserID := range loginResMes.OnlineUsersID {
-			fmt.Printf("用户id:%d\n", onlineUserID)
 			// 初始化onlineUsers
 			user := &message.User{
 				UserID:     onlineUserID,
@@ -162,92 +143,8 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 			}
 			onlineUsers[onlineUserID] = user
 		}
-		fmt.Println()
 	} else {
 		err = errors.New(loginResMes.Error)
 	}
 	return
 }
-
-// func (up *UserProcess) Login(userID int, userPwd string) (err error) {
-// 	// 1.连接到服务器
-// 	conn, err := net.Dial("tcp", "192.168.68.166:8889")
-// 	if err != nil {
-// 		return err
-// 	}
-// 	// 延迟断开
-// 	defer func() {
-// 		fmt.Println("清理net.Conn")
-// 		conn.Close()
-// 	}()
-
-// 	// 2.准备通过conn发送消息
-// 	var mes message.Message
-// 	mes.Type = message.LoginMesType
-
-// 	// 3.创建loginMes结构体
-// 	var loginMes message.LoginMes
-// 	loginMes.UserID = userID
-// 	loginMes.UserPwd = userPwd
-
-// 	// 4.序列化loginMes
-// 	data, err := json.Marshal(&loginMes)
-// 	if err != nil {
-// 		// fmt.Println("json.Marshal failed, err=", err.Error())
-// 		return err
-// 	}
-
-// 	// 5.填充mes.Data
-// 	mes.Data = string(data)
-
-// 	// 使用Transfer发送数据
-// 	tf := utils.NewTransfer(conn)
-// 	err = tf.WritePkg(&mes)
-// 	if err != nil {
-// 		fmt.Println("登录消息发送失败")
-// 		return
-// 	}
-
-// 	// 读取客服务端返回的mes
-// 	resMes, err := tf.ReadPkg()
-// 	if err != nil {
-// 		// fmt.Println("err=", err.Error())
-// 		return
-// 	}
-// 	// 反序列化 resMes.Data
-// 	var loginResMes message.LoginResMes
-// 	err = json.Unmarshal([]byte(resMes.Data), &loginResMes)
-// 	if err != nil {
-// 		fmt.Println("json.Umarshal failed, err=", err.Error())
-// 		return
-// 	}
-// 	if loginResMes.Code == 200 {
-
-// 		CurUser.Conn = conn
-// 		CurUser.UserID = userID
-// 		CurUser.UserName = loginResMes.UserName
-// 		CurUser.UserStatus = message.USER_ONLINE
-
-// 		// 可以显示当前在线用户id列表
-// 		fmt.Println("当前在线用户列表如下:")
-// 		for _, onlineUserID := range loginResMes.OnlineUsersID {
-// 			fmt.Printf("用户id:%d\n", onlineUserID)
-// 			// 初始化onlineUsers
-// 			user := &message.User{
-// 				UserID:     onlineUserID,
-// 				UserStatus: message.USER_ONLINE,
-// 			}
-// 			onlineUsers[onlineUserID] = user
-// 		}
-// 		fmt.Println()
-// 		// 启一个协程保持和服务器的练习
-// 		go serverMesProcess(conn)
-
-// 		// 1.显示二级菜单
-// 		ShowMenu(loginResMes.UserName)
-
-// 	} else {
-// 		fmt.Println(loginResMes.Error)
-// 	}
-// 	return
-// }

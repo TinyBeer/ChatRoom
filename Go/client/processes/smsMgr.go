@@ -2,7 +2,7 @@ package processes
 
 import (
 	"ChartRoom/common/message"
-	"encoding/json"
+	"ChartRoom/common/utils"
 	"fmt"
 )
 
@@ -10,9 +10,9 @@ import (
 func outputGroupMes(mes *message.Message) {
 	// 反序列化
 	var smsMes message.SmsMes
-	err := json.Unmarshal([]byte(mes.Data), &smsMes)
+	err := utils.Unpack(mes, &smsMes)
 	if err != nil {
-		fmt.Println("json.Unmarshal failed, err=", err.Error())
+		fmt.Println("Unpack failed, err=", err.Error())
 		return
 	}
 

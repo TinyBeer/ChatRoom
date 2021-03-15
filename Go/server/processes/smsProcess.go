@@ -3,8 +3,8 @@ package processes
 import (
 	"ChartRoom/common/message"
 	"ChartRoom/common/utils"
-	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 )
 
@@ -18,9 +18,9 @@ func (sp *SmsProcess) SendGroupMes(mes *message.Message) (err error) {
 
 	// 取出smsMes
 	var smsMes message.SmsMes
-	err = json.Unmarshal([]byte(mes.Data), &smsMes)
+	err = utils.Unpack(mes, &smsMes)
 	if err != nil {
-		fmt.Println("json.Unmarshal failed, err=", err.Error())
+		log.Println("Unpack failed, err=", err.Error())
 		return
 	}
 

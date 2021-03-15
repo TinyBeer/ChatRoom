@@ -3,7 +3,6 @@ package processes
 import (
 	"ChartRoom/common/message"
 	"ChartRoom/common/utils"
-	"encoding/json"
 	"fmt"
 )
 
@@ -22,14 +21,11 @@ func (sp *SmsProcess) SendGroupMes(content string) (err error) {
 	smsMes.UserStatus = CurUser.UserStatus
 
 	// 序列化smsMes
-	data, err := json.Marshal(&smsMes)
+	err = utils.Pack(&mes, &smsMes)
 	if err != nil {
-		fmt.Println("json.Marshal failed, err=", err.Error())
+		fmt.Println("Pack failed, err=", err.Error())
 		return
 	}
-
-	// 装在mes内容
-	mes.Data = string(data)
 
 	// 发送
 	tf := utils.NewTransfer(CurUser.Conn)
