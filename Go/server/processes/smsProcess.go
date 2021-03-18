@@ -1,10 +1,9 @@
 package processes
 
 import (
-	"ChartRoom/common/message"
-	"ChartRoom/common/utils"
-	"ChartRoom/server/model"
-	"ChartRoom/server/redisdb"
+	"ChartRoom/Go/common/message"
+	"ChartRoom/Go/common/utils"
+	"ChartRoom/Go/server/model"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -70,7 +69,7 @@ func (sp *SmsProcess) SendMessage(mes *message.Message) (err error) {
 		return
 	}
 
-	conn := redisdb.Pool.Get()
+	conn := model.MyUserDao.Pool.Get()
 	defer conn.Close()
 
 	// 判断用户是否存在

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ChartRoom/client/processes"
-	"ChartRoom/client/view"
+	"ChartRoom/Go/client/processes"
+	"ChartRoom/Go/client/view"
 	"fmt"
 	"log"
 	"net"

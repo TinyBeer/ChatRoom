@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"ChartRoom/common/message"
+	"ChartRoom/Go/common/message"
 	"encoding/json"
 )
 

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"ChartRoom/common/message"
-	"ChartRoom/server/redisdb"
+	"ChartRoom/Go/common/message"
+
 	"encoding/json"
 	"fmt"
 
@@ -20,7 +20,7 @@ type UserDao struct {
 }
 
 func InitUserDao() {
-	MyUserDao = NewUserDao(redisdb.Pool)
+	MyUserDao = NewUserDao(RPool)
 }
 
 // 使用工厂模式创建UserDao实例

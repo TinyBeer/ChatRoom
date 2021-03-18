@@ -1,7 +1,7 @@
 package model
 
 import (
-	"ChartRoom/common/message"
+	"ChartRoom/Go/common/message"
 	"net"
 )
 

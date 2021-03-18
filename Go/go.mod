@@ -1,4 +1,4 @@
-module ChartRoom
+module ChartRoom/Go
 
 go 1.16
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ChartRoom/server/model"
-	"ChartRoom/server/processes"
+	"ChartRoom/Go/server/model"
+	"ChartRoom/Go/server/processes"
 	"fmt"
 	"net"
 	"time"

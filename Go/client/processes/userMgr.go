@@ -1,8 +1,8 @@
 package processes
 
 import (
-	"ChartRoom/client/model"
-	"ChartRoom/common/message"
+	"ChartRoom/Go/client/model"
+	"ChartRoom/Go/common/message"
 	"fmt"
 )
 

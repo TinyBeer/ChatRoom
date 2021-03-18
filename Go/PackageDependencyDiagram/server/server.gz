@@ -1,8 +1,7 @@
 digraph {
     main->model->message;
     main->processes->message;
-    model->redis;  
     processes->utils->message;
-    processes->model->redisdb->redis;
+    processes->model->redis;
     redis [lable="github.com/garyburd/redigo/redis"];
 }

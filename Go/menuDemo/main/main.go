@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ChartRoom/menuDemo/menu"
+	"ChartRoom/Go/menuDemo/menu"
 )
 
 func main() {
