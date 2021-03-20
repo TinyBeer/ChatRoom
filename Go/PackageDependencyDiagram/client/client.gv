@@ -1,5 +1,7 @@
 digraph {
     main -> view;
     main -> processes -> utils;
-    processes -> message;
+    processes -> message->userinfo;
+    processes->userinfo;
+    processes->model->userinfo;
 }
