@@ -4,7 +4,7 @@
 
 项目目的：实现基于Golang开发多人在线聊天平台
 
-相关技术：Go Redis Vue Gin
+相关技术：Go socket Redis Vue
 
 
 
@@ -12,9 +12,12 @@
 
 目前正在进行服务端开发。。。
 
-已经实现了
-1.登录 注册  
-2.在线用户列表  登录提示  离线提示  群聊  点对点聊天等功能
+目前功能
+
+1.用户登录 用户注册
+2.用户上线 下线通知 在线用户列表
+3.消息群发  点对点聊天等功能
+
 
 服务端包依赖关系图
-![server gz](https://user-images.githubusercontent.com/37320653/111642345-fa129500-8838-11eb-8523-ce42b112081f.png)
+![image](https://user-images.githubusercontent.com/37320653/111859109-47961b80-8979-11eb-8908-aac6e01d8d21.png)
