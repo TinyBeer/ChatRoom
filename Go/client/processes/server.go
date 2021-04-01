@@ -1,8 +1,8 @@
 package processes
 
 import (
-	"ChartRoom/common/message"
-	"ChartRoom/common/utils"
+	"ChatRoom/Go/common/message"
+	"ChatRoom/Go/common/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -32,13 +32,12 @@ func ServerMesProcess(conn net.Conn) {
 		case message.NotifyUserStatusMesType:
 			// 处理用户状态更新消息
 			var notifyUserStatusMes message.NotifyUserStatusMes
-			err = utils.Unpack(&mes, &notifyUserStatusMes)
+			err = message.Unpack(&mes, &notifyUserStatusMes)
 			if err != nil {
 				log.Println("Unpack failed, err=", err.Error())
 				continue
 			}
 			updateUserStatus(&notifyUserStatusMes)
-			OutputOnlineUsers()
 		case message.SmsMesType:
 			outputMes(&mes)
 		default:

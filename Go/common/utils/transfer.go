@@ -1,8 +1,9 @@
 package utils
 
 import (
+	"ChatRoom/Go/common/datasafe"
 	"encoding/binary"
-	"fmt"
+	"log"
 	"net"
 )
 
@@ -19,6 +20,12 @@ func NewTransfer(conn net.Conn) *Transfer {
 
 // 传输[]byte 数据
 func (tf *Transfer) WriteData(data []byte) (err error) {
+	// 传输前进行数据加密
+	data, err = datasafe.EncryptoAES(data)
+	if err != nil {
+		return
+	}
+
 	// 发送data的长度给对方
 	var pkgLen uint32 = uint32(len(data))
 	binary.BigEndian.PutUint32(tf.Buf[0:4], pkgLen)
@@ -26,7 +33,7 @@ func (tf *Transfer) WriteData(data []byte) (err error) {
 	// 发送长度
 	n, err := tf.Conn.Write(tf.Buf[0:4])
 	if n != 4 || err != nil {
-		fmt.Println("conn.Write failed, err=", err.Error())
+		log.Println("conn.Write failed, err=", err.Error())
 		return
 	}
 
@@ -57,10 +64,12 @@ func (tf *Transfer) ReadDate() (data []byte, err error) {
 		return
 	}
 
-	// 开辟新的存储空间
-	data = make([]byte, pkgLen)
-	copy(data, tf.Buf[:pkgLen])
+	// // 开辟新的存储空间
+	// data = make([]byte, pkgLen)
+	// copy(data, tf.Buf[:pkgLen])
 
+	// 数据接收后，解密
+	data, err = datasafe.DecryptoAES(tf.Buf[:pkgLen])
 	return
 }
 

@@ -1,11 +1,13 @@
 package model
 
 import (
-	"ChartRoom/common/message"
+	"ChatRoom/Go/common/userinfo"
+
 	"encoding/json"
 	"fmt"
 
 	"github.com/garyburd/redigo/redis"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // 服务器启动后初始化一个全局的UserDao
@@ -18,6 +20,10 @@ type UserDao struct {
 	Pool *redis.Pool
 }
 
+func InitUserDao() {
+	MyUserDao = NewUserDao(RPool)
+}
+
 // 使用工厂模式创建UserDao实例
 func NewUserDao(pool *redis.Pool) (userDao *UserDao) {
 	userDao = &UserDao{
@@ -28,7 +34,7 @@ func NewUserDao(pool *redis.Pool) (userDao *UserDao) {
 
 // 以下是增删改查
 // 根据一个用户id返回一个User实例
-func (udao *UserDao) getUserById(conn redis.Conn, id int) (user *message.User, err error) {
+func (udao *UserDao) GetUserById(conn redis.Conn, id int) (user *userinfo.User, err error) {
 	// 通过给定的id 去redis查询用户
 	res, err := redis.String(conn.Do("HGet", "users", id))
 	if err != nil {
@@ -40,7 +46,7 @@ func (udao *UserDao) getUserById(conn redis.Conn, id int) (user *message.User, e
 		return nil, err
 	}
 	// fmt.Println(res)
-	user = &message.User{}
+	user = &userinfo.User{}
 	// 无错误  将res反序列化为User实例
 	err = json.Unmarshal([]byte(res), user)
 	if err != nil {
@@ -51,17 +57,25 @@ func (udao *UserDao) getUserById(conn redis.Conn, id int) (user *message.User, e
 }
 
 // Register向redis注册用户
-func (udao *UserDao) Register(user *message.User) (err error) {
+func (udao *UserDao) Register(user *userinfo.RegisterUserInfo) (err error) {
 	// 从连接池取出连接
 	conn := udao.Pool.Get()
 	// 延时关闭
 	defer conn.Close()
 
-	_, err = udao.getUserById(conn, user.UserID)
+	_, err = udao.GetUserById(conn, user.UserID)
 	if err == nil {
 		// 用户ID已经存在
 		return ERROR_USER_EXIST
 	}
+
+	// 存储前 用户id加密
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.UserPwd), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("用户密码加密失败，err:", err)
+		return
+	}
+	user.UserPwd = string(hashedPassword)
 
 	// 该用户ID可用
 	data, err := json.Marshal(user)
@@ -81,19 +95,19 @@ func (udao *UserDao) Register(user *message.User) (err error) {
 // 完成登录校验 Login
 // 完成对用户信息的校验
 // 如果用户的id或pwd有错误 返回错误信息
-func (udao *UserDao) Login(userID int, userPwd string) (user *message.User, err error) {
+func (udao *UserDao) Login(userID int, userPwd string) (user *userinfo.User, err error) {
 	// 从连接池取出连接
 	conn := udao.Pool.Get()
 	// 延时关闭
 	defer conn.Close()
 
-	user, err = udao.getUserById(conn, userID)
+	user, err = udao.GetUserById(conn, userID)
 	if err != nil {
 		return
 	}
 
-	// 用获取到了
-	if user.UserPwd != userPwd {
+	// 判断密码是否正确
+	if err = bcrypt.CompareHashAndPassword([]byte(user.UserPwd), []byte(userPwd)); err != nil {
 		err = ERROR_USER_PWD
 		return
 	}

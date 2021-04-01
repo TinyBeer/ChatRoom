@@ -1,8 +1,9 @@
 package processes
 
 import (
-	"ChartRoom/common/message"
-	"ChartRoom/common/utils"
+	"ChatRoom/Go/common/message"
+	"ChatRoom/Go/common/userinfo"
+	"ChatRoom/Go/common/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,12 +30,12 @@ func (up *UserProcess) Register(userID int, userPwd, userName string) (err error
 
 	// 3.创建registerMes结构体
 	var registerMes message.RegisterMes
-	registerMes.User.UserID = userID
-	registerMes.User.UserPwd = userPwd
-	registerMes.User.UserName = userName
+	registerMes.UserID = userID
+	registerMes.UserPwd = userPwd
+	registerMes.UserName = userName
 
 	// 封包
-	err = utils.Pack(&mes, &registerMes)
+	err = message.Pack(&mes, &registerMes)
 	if err != nil {
 		return err
 	}
@@ -67,7 +68,7 @@ func (up *UserProcess) Register(userID int, userPwd, userName string) (err error
 
 	// 解包
 	var registerResMes message.RegisterResMes
-	err = utils.Unpack(&resMes, &registerResMes)
+	err = message.Unpack(&resMes, &registerResMes)
 	if err != nil {
 		log.Println("Unpack failed, err=", err.Error())
 		return
@@ -86,9 +87,9 @@ func (up *UserProcess) Logout() {
 	mes.Type = message.LogoutMesType
 	// 2.创建logoutMes
 	var logoutMes message.LogoutMes
-	logoutMes.User = CurUser.User
+	logoutMes.UserID = CurUser.User.UserID
 	// 3.封包
-	err := utils.Pack(&mes, &logoutMes)
+	err := message.Pack(&mes, &logoutMes)
 	if err != nil {
 		log.Println("Pack failed, err=", err.Error())
 		return
@@ -118,12 +119,16 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 
 	// 3.创建loginMes结构体
 	var loginMes message.LoginMes
+	loginMes.AutenticationType = message.PasswordType
 	loginMes.UserID = userID
 	loginMes.UserPwd = userPwd
 
 	// 4.封包
-	err = utils.Pack(&mes, &loginMes)
-
+	err = message.Pack(&mes, &loginMes)
+	if err != nil {
+		log.Println("pack failed, err=", err.Error())
+		return
+	}
 	// 序列化
 	data, err := json.Marshal(&mes)
 	if err != nil {
@@ -153,7 +158,7 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 
 	// 解包
 	var loginResMes message.LoginResMes
-	err = utils.Unpack(&resMes, &loginResMes)
+	err = message.Unpack(&resMes, &loginResMes)
 	if err != nil {
 		fmt.Println("Unpack failed, err=", err.Error())
 		return
@@ -169,7 +174,7 @@ func (up *UserProcess) Login(userID int, userPwd string) (conn net.Conn, err err
 		// 初始化在线用户列表
 		for _, onlineUserID := range loginResMes.OnlineUsersID {
 			// 初始化onlineUsers
-			user := &message.User{
+			user := &userinfo.User{
 				UserID:     onlineUserID,
 				UserStatus: message.USER_ONLINE,
 			}

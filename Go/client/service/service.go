@@ -1,7 +1,7 @@
 package service
 
 import (
-	"ChartRoom/client/processes"
+	"ChatRoom/Go/client/processes"
 	"fmt"
 )
 

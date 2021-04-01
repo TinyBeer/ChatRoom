@@ -1,12 +1,12 @@
 package model
 
 import (
-	"ChartRoom/common/message"
+	"ChatRoom/Go/common/userinfo"
 	"net"
 )
 
 // 创建全局
 type CurUser struct {
-	message.User
+	userinfo.User
 	Conn net.Conn
 }

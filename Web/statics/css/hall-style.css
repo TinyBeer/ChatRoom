@@ -1,0 +1,71 @@
+* {
+    margin: 0 auto;
+    padding: 0;
+}
+
+body {
+    background-color: gray;
+    align-content: center;
+    justify-content: center;
+}
+
+#container {
+     width: 98%;
+     height: 98vh;
+   
+    background-color: greenyellow;
+}
+
+#dialog-container {
+    width: 100%;
+    height: 78%;
+    background-image: url("/xxx/img/hallbg.jpg") ;
+}
+
+.dialog-container li {
+    list-style: none;
+    top: 600;         
+}
+
+.dialog-container span{
+    background-color:greenyellow;
+    padding: 5px 8px;
+    display: inline-block;
+    border-radius: 4px;
+    margin:10px 0 10px 30px;
+    position: relative;
+    display:run-in;
+}
+.dialog-container span::after{
+    content: '';
+    border: 8px solid #ffffff00;
+    border-right: 8px solid greenyellow;
+    border-radius: 3px;
+    position: absolute;
+    top: 6px;
+    left: -16px;
+}
+
+
+#input-container {
+    width: 100%;
+    height:20%;
+    align-content: center;
+    background-color: whitesmoke;
+}
+
+#input-container textarea {
+    width:80%;
+    height:99%;
+    border-top:0px;
+    border-left:0px;
+    border-bottom:0px;
+    border-right:auto;
+    font-size: 24px;
+   
+}
+
+button {
+    position: relative;
+    float: right;
+} 

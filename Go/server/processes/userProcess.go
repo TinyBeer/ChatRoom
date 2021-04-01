@@ -1,9 +1,10 @@
 package processes
 
 import (
-	"ChartRoom/common/message"
-	"ChartRoom/common/utils"
-	"ChartRoom/server/model"
+	"ChatRoom/Go/common/message"
+	"ChatRoom/Go/common/utils"
+	"ChatRoom/Go/server/model"
+
 	"encoding/json"
 	"fmt"
 	"log"
@@ -21,7 +22,7 @@ type UserProcess struct {
 func (up *UserProcess) ServerProcessLogout(mes *message.Message) (err error) {
 	// 1.先取出mes.Data，并反序列化
 	var logoutMes message.LogoutMes
-	err = utils.Unpack(mes, &logoutMes)
+	err = message.Unpack(mes, &logoutMes)
 	if err != nil {
 		return
 	}
@@ -56,7 +57,7 @@ func (up *UserProcess) NotifyMeOffline(userId int) {
 	notifyUserStatusMes.UserStatus = message.USER_OFFLINE
 
 	// 封包
-	err := utils.Pack(&mes, &notifyUserStatusMes)
+	err := message.Pack(&mes, &notifyUserStatusMes)
 	if err != nil {
 		fmt.Println("Pack failed, err=", err.Error())
 		return
@@ -103,7 +104,7 @@ func (up *UserProcess) NotifyMeOnline(userId int) {
 	notifyUserStatusMes.UserStatus = message.USER_ONLINE
 
 	// 封包
-	err := utils.Pack(&mes, &notifyUserStatusMes)
+	err := message.Pack(&mes, &notifyUserStatusMes)
 	if err != nil {
 		fmt.Println("Pack failed, err=", err.Error())
 		return
@@ -126,7 +127,7 @@ func (up *UserProcess) NotifyMeOnline(userId int) {
 // 处理注册mes
 func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) {
 	var registerMes message.RegisterMes
-	err = utils.Unpack(mes, &registerMes)
+	err = message.Unpack(mes, &registerMes)
 	if err != nil {
 		return
 	}
@@ -138,7 +139,7 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 	var registerResMes message.RegisterResMes
 
 	// 进行注册
-	err = model.MyUserDao.Register(&registerMes.User)
+	err = model.MyUserDao.Register(&registerMes.RegisterUserInfo)
 	if err != nil {
 		switch err {
 		case model.ERROR_USER_EXIST:
@@ -153,7 +154,7 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 	}
 
 	// 3.封包
-	err = utils.Pack(&resMes, &registerResMes)
+	err = message.Pack(&resMes, &registerResMes)
 	if err != nil {
 		fmt.Println("Pack failed, err=", err)
 		return
@@ -175,7 +176,7 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	// 1.先取出mes.Data，并反序列化
 	var loginMes message.LoginMes
-	err = utils.Unpack(mes, &loginMes)
+	err = message.Unpack(mes, &loginMes)
 	if err != nil {
 		return
 	}
@@ -184,46 +185,59 @@ func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	resMes.Type = message.LoginResMesType
 	var loginResMes message.LoginResMes
 
-	// 2.比对
+	// 2.比对数据库
 	// 到redis数据库进行验证
-	user, err := model.MyUserDao.Login(loginMes.UserID, loginMes.UserPwd)
-	if err != nil {
-		switch err {
-		case model.ERROR_USER_NOTEXIST:
-			loginResMes.Code = 500 // 500 用户不存在
-			loginResMes.Error = err.Error()
-		case model.ERROR_USER_PWD:
-			loginResMes.Code = 403 // 403 密码不正确
-			loginResMes.Error = err.Error()
-		default:
-			loginResMes.Code = 505 // 505 服务器内部错误
-			loginResMes.Error = "服务器内部错误"
-		}
-	} else {
-		loginResMes.Code = 200 // 登录成功
-		// 用户登录成功  更行onlineUsers
-		// 为up加入UserID
-		up.UserID = loginMes.UserID
-		userMgr.AddOnlineUser(up)
-		fmt.Printf("用户%d登录\n", loginMes.UserID)
-		// 通知其他用户上线
-		up.NotifyOthersOnline(loginMes.UserID)
-
-		loginResMes.UserName = user.UserName
-
-		// fmt.Println(user)
-		for id, _ := range userMgr.onlineUsers {
-			if id == user.UserID {
-				continue
+	switch loginMes.AutenticationType {
+	case message.PasswordType:
+		user, err := model.MyUserDao.Login(loginMes.UserID, loginMes.UserPwd)
+		if err != nil {
+			switch err {
+			case model.ERROR_USER_NOTEXIST:
+				loginResMes.Code = 500 // 500 用户不存在
+				loginResMes.Error = err.Error()
+			case model.ERROR_USER_PWD:
+				loginResMes.Code = 403 // 403 密码不正确
+				loginResMes.Error = err.Error()
+			default:
+				loginResMes.Code = 505 // 505 服务器内部错误
+				loginResMes.Error = "服务器内部错误"
 			}
-			loginResMes.OnlineUsersID = append(loginResMes.OnlineUsersID, id)
+		} else {
+
+			_, ok := userMgr.onlineUsers[loginMes.UserID]
+
+			if ok {
+				loginResMes.Code = 501 // 用户已登录
+				loginResMes.Error = "用户已登录"
+			} else {
+				loginResMes.Code = 200 // 登录成功
+				// 用户登录成功  更行onlineUsers
+				// 为up加入UserID
+				up.UserID = loginMes.UserID
+				loginResMes.UserName = user.UserName
+				userMgr.AddOnlineUser(up)
+				fmt.Printf("用户%d登录\n", loginMes.UserID)
+				// 通知其他用户上线
+				up.NotifyOthersOnline(loginMes.UserID)
+
+				// fmt.Println(user)
+				for id, _ := range userMgr.onlineUsers {
+					if id == user.UserID {
+						continue
+					}
+					loginResMes.OnlineUsersID = append(loginResMes.OnlineUsersID, id)
+				}
+			}
+
 		}
+	default:
+		return
 	}
 
-	// 3.序列化
-	err = utils.Pack(&resMes, &loginResMes)
+	// 3.封包
+	err = message.Pack(&resMes, &loginResMes)
 	if err != nil {
-		fmt.Println("Pack failed, err=", err)
+		log.Println("Pack failed, err=", err)
 		return
 	}
 
@@ -237,46 +251,13 @@ func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	tf := utils.NewTransfer(up.Conn)
 	tf.WriteData(data)
 
+	// 登录确认消息发送后执行
+	// 登录成功则发送离线留言
 	if loginResMes.Code == 200 {
-		// 获取离线留言
-		dataSlice, mesErr := model.MyUserDao.WithdrawOfflineMesById(up.UserID)
-		if mesErr != nil {
-			log.Println("WithdrawOfflineMesById failed, err=", mesErr.Error())
-			return
-		}
-
-		// 创建 messageMes
-		var mes message.Message
-		mes.Type = message.SmsMesType
-		var messageMes message.MessageMes
-		var smsMes message.SmsMes
 		smsProcess := &SmsProcess{}
-		for _, messageString := range dataSlice {
-			if err != nil {
-				log.Println("Unmarshal failed, err=", mesErr.Error())
-				continue
-			}
-			// 反序列化 messageMes
-			mesErr = json.Unmarshal([]byte(messageString), &messageMes)
-			if mesErr != nil {
-				log.Println("Unmarshal failed, err=", mesErr.Error())
-				return
-			}
-
-			// 装填smsMes信息
-			smsMes.Content = messageMes.Content
-			smsMes.User = messageMes.User
-
-			// 封包
-			mesErr = utils.Pack(&mes, &smsMes)
-			if err != mesErr {
-				fmt.Println("Pack failed, err=", err)
-				return
-			}
-			log.Println(mes)
-
-			// 发送
-			smsProcess.SendMesToEachOnlineUser(&mes, up.Conn)
+		mesErr := smsProcess.SendOfflineMessage(up.UserID, up.Conn)
+		if mesErr != nil {
+			log.Println("SendOfflineMessage failed, err=", mesErr.Error())
 		}
 	}
 
