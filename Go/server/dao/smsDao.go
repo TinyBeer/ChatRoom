@@ -1,12 +1,15 @@
 package dao
 
 import (
+	"ChatRoom/Go/server/cache"
 	"ChatRoom/Go/server/database"
 	"log"
+	"strconv"
 )
 
 /*   mysql */
 type MySqlSmsDao struct {
+	ISmsDao
 }
 
 const (
@@ -48,7 +51,6 @@ func (msd *MySqlSmsDao) WithdrawByID(id int) ([]string, error) {
 }
 
 //  redis
-/*
 type RedisSmsDao struct {
 }
 
@@ -81,5 +83,5 @@ func (rsd *RedisSmsDao) WithdrawByID(id int) (dataSlice []string, err error) {
 	// 退出
 	return
 }
-*/
-// end redis
+
+// end redis */

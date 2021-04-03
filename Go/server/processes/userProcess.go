@@ -150,7 +150,7 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 	err = dao.MyUserDao.Insert(registerMes.UserID, string(hashedPassword), registerMes.UserName)
 	if err != nil {
 		switch err {
-		case dao.ERROR_USER_EXIST:
+		case dao.ERR_USER_EXIST:
 			registerResMes.Code = 505
 			registerResMes.Error = err.Error()
 		default:
@@ -201,16 +201,16 @@ func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 		user, err := dao.MyUserDao.GetUserByID(loginMes.UserID)
 		if err == nil {
 			if err = bcrypt.CompareHashAndPassword([]byte(user.UserPwd), []byte(loginMes.UserPwd)); err != nil {
-				err = dao.ERROR_USER_PWD
+				err = dao.ERR_USER_PWD
 			}
 		}
 
 		if err != nil {
 			switch err {
-			case dao.ERROR_USER_NOTEXIST:
+			case dao.ERR_USER_NOTEXIST:
 				loginResMes.Code = 500 // 500 用户不存在
 				loginResMes.Error = err.Error()
-			case dao.ERROR_USER_PWD:
+			case dao.ERR_USER_PWD:
 				loginResMes.Code = 403 // 403 密码不正确
 				loginResMes.Error = err.Error()
 			default:

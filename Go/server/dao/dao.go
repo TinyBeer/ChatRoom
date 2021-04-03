@@ -2,20 +2,45 @@ package dao
 
 import (
 	"ChatRoom/Go/common/userinfo"
+	"ChatRoom/Go/server/cache"
+	"ChatRoom/Go/server/database"
 	"errors"
 )
 
+const (
+	MODE_O_REDIS = iota
+	MODE_REDIS_MYSQL
+)
+
 var (
-	ERROR_USER_NOTEXIST = errors.New("用户不存在")
-	ERROR_USER_EXIST    = errors.New("用户已经存在")
-	ERROR_USER_PWD      = errors.New("密码不正确")
+	ERR_USER_NOTEXIST = errors.New("用户不存在")
+	ERR_USER_EXIST    = errors.New("用户已经存在")
+	ERR_USER_PWD      = errors.New("密码不正确")
 )
 
 // 服务器启动后初始化一个全局的UserDao
 var (
-	MyUserDao = &RedisUserDao{}
-	MySmsDao  = &MySqlSmsDao{}
+	MyUserDao IUserDao
+	MySmsDao  ISmsDao
 )
+
+func Init(mode int) {
+
+	switch mode {
+	case MODE_O_REDIS:
+		cache.InitPool()
+		MyUserDao = &RedisUserDao{}
+		MySmsDao = &RedisSmsDao{}
+	case MODE_REDIS_MYSQL:
+		cache.InitPool()
+		database.Init()
+		MyUserDao = &RedisUserDao{}
+		MySmsDao = &MySqlSmsDao{}
+	default:
+		panic("init with unkown mode")
+	}
+
+}
 
 type IUserDao interface {
 	Insert(int, string, string) error        // 添加用户
@@ -27,6 +52,6 @@ type IUserDao interface {
 }
 
 type ISmsDao interface {
-	Deposite()
-	Withdraw()
+	DepositeByID(int, string) error
+	WithdrawByID(int) ([]string, error)
 }

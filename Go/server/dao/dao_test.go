@@ -9,7 +9,7 @@ import (
 
 func TestMain(m *testing.M) {
 	fmt.Println("write setup code here...") // 测试之前的做一些设置
-	database.Init("root", "123456", "127.0.0.1", 3306, "chart_room")
+	database.Init()
 
 	// 如果 TestMain 使用了 flags，这里应该加上flag.Parse()
 	retCode := m.Run()                         // 执行测试

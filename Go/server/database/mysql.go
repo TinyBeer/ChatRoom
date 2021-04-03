@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -24,14 +25,14 @@ func Close() {
 	sqldb.Close()
 }
 
-func Init(username string, password string, addr string, port int, dbName string) (err error) {
+func Init() (err error) {
 	// connect to mysql
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8",
-		username,
-		password,
-		addr,
-		port,
-		dbName)
+		viper.GetString("database.username"),
+		viper.GetString("database.password"),
+		viper.GetString("database.host"),
+		viper.GetInt("database.port"),
+		viper.GetString("database.database"))
 	// dataSourceName
 	sqldb, err = sql.Open("mysql", dsn)
 	if err != nil {

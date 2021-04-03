@@ -17,7 +17,7 @@ func (rud *RedisUserDao) Update() {
 
 func (rud *RedisUserDao) Insert(id int, pwd string, name string) error {
 	_, err := rud.GetUserByID(id)
-	if err != ERROR_USER_NOTEXIST {
+	if err != ERR_USER_NOTEXIST {
 		return err
 	}
 
@@ -50,7 +50,7 @@ func (rud *RedisUserDao) GetUserByID(id int) (user *userinfo.User, err error) {
 		// 发生错误
 		if err == cache.ErrNil {
 			// 没有找到对应id
-			err = ERROR_USER_NOTEXIST
+			err = ERR_USER_NOTEXIST
 		}
 		return nil, err
 	}

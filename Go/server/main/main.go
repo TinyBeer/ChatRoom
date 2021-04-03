@@ -1,21 +1,37 @@
 package main
 
 import (
-	"ChatRoom/Go/server/cache"
+	"ChatRoom/Go/server/dao"
 	"ChatRoom/Go/server/processes"
 	"fmt"
 	"net"
-	"time"
+	"os"
+
+	"github.com/spf13/viper"
 )
 
+func Config() {
+	workDir, _ := os.Getwd()
+	viper.SetConfigName("application")
+	viper.SetConfigType("yml")
+	viper.AddConfigPath(workDir + "/config")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
+	// 初始化配置
+	Config()
+
 	fmt.Println("服务器启动...")
 	// 初始化Dao功能
-	cache.InitPool("localhost", 6379, 4, 8, 300*time.Second)
+	dao.Init(viper.GetInt("server.mode"))
 
 	// fmt.Println("服务器[新结构]在8889端口监听...")
 
-	listen, err := net.Listen("tcp", "0.0.0.0:8889")
+	listen, err := net.Listen("tcp", ":"+viper.GetString("server.port"))
 	if err != nil {
 		fmt.Println("net.Listen failed, err=", err)
 		return

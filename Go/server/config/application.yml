@@ -1,0 +1,22 @@
+server:
+ port: 8889
+#  mode: 0: MODE_O_REDIS 1: MODE_REDIS_MYSQL
+ mode: 1
+database:
+ driverName: mysql 
+ host: localhost
+ port: 3306 
+ username: root
+ password: 123456
+ database: chart_room
+ charset: utf8
+ loc: Asia/Shanghai
+cache:
+  name: redis
+  host: localhost
+  port: 6379 
+  maxIdle: 4
+  maxActive: 8   
+  idleTimeout: 300
+        
+

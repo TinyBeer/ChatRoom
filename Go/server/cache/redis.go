@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -13,12 +14,12 @@ var (
 	ErrNil    = errors.New("nil returned")
 )
 
-func InitPool(addr string, port int, maxIdle, maxActive int, idleTimeout time.Duration) {
-	address := fmt.Sprintf("%s:%d", addr, port)
+func InitPool() {
+	address := fmt.Sprintf("%s:%d", viper.GetString("cache.host"), viper.GetInt("cache.port"))
 	redisPool = &redis.Pool{
-		MaxIdle:     maxIdle,     // 最大空闲数
-		MaxActive:   maxActive,   // 最大连接数
-		IdleTimeout: idleTimeout, // 最大空闲事件
+		MaxIdle:     viper.GetInt("cache.maxIdle"),                             // 最大空闲数
+		MaxActive:   viper.GetInt("cache.maxActive"),                           // 最大连接数
+		IdleTimeout: viper.GetDuration("cache.idleTimeout") * time.Millisecond, // 最大空闲时间
 		Dial: func() (redis.Conn, error) { // 创建连接的函数
 			return redis.Dial("tcp", address)
 		},
