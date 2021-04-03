@@ -5,66 +5,25 @@ import (
 	"ChatRoom/Go/server/cache"
 	"encoding/json"
 	"fmt"
-	"log"
-	"strconv"
-
-	"golang.org/x/crypto/bcrypt"
-)
-
-// 服务器启动后初始化一个全局的UserDao
-var (
-	MyUserDao = &RedisUserDao{}
 )
 
 type RedisUserDao struct {
+	IUserDao
 }
 
-func (udao *RedisUserDao) DepositUserOfflineMesById(id int, data []byte) (err error) {
-	// 将数据存入mesList[userId]中
-	err = cache.RedisLpush("mesList"+strconv.Itoa(id), string(data))
-	if err != nil {
-		return err
-	}
-	// 退出
-	return
+func (rud *RedisUserDao) Update() {
+	panic("not implemented") // TODO: Implement
 }
 
-func (udao *RedisUserDao) WithdrawOfflineMesById(id int) (dataSlice []string, err error) {
-	// 将数据存入mesList[userId]中
-	dataSlice, err = cache.RedisGetList("mesList" + strconv.Itoa(id))
-	log.Println(dataSlice)
-	if err != nil {
-		return
-	}
-
-	// 如果留言数量不为零
-	if len(dataSlice) != 0 {
-		err = cache.RedisDel("mesList" + strconv.Itoa(id))
-		if err != nil {
-			log.Println(err.Error())
-		}
-	}
-
-	// 退出
-	return
-}
-
-func (rud *RedisUserDao) Signup(id int, pwd string, name string) error {
-	_, err := rud.getUserById(id)
+func (rud *RedisUserDao) Insert(id int, pwd string, name string) error {
+	_, err := rud.GetUserByID(id)
 	if err != ERROR_USER_NOTEXIST {
-		return err
-	}
-
-	// 存储前 用户id加密
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
-	if err != nil {
-		fmt.Println("用户密码加密失败，err:", err)
 		return err
 	}
 
 	user := userinfo.User{
 		UserID:   id,
-		UserPwd:  string(hashedPassword),
+		UserPwd:  string(pwd),
 		UserName: name,
 	}
 
@@ -81,47 +40,9 @@ func (rud *RedisUserDao) Signup(id int, pwd string, name string) error {
 		return err
 	}
 	return nil
-
 }
 
-func (rud *RedisUserDao) Signin(id int, pwd string) (*userinfo.User, error) {
-	user, err := rud.getUserById(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// 判断密码是否正确
-	if err = bcrypt.CompareHashAndPassword([]byte(user.UserPwd), []byte(pwd)); err != nil {
-		err = ERROR_USER_PWD
-		return nil, err
-	}
-	return user, nil
-}
-
-func (rud *RedisUserDao) Delete(id int, pwd string) error {
-	user, err := rud.getUserById(id)
-	if err != nil {
-		return err
-	}
-
-	// 判断密码是否正确
-	if err = bcrypt.CompareHashAndPassword([]byte(user.UserPwd), []byte(pwd)); err != nil {
-		err = ERROR_USER_PWD
-		return err
-	}
-
-	return cache.RedisDel("users", id)
-}
-
-func (rud *RedisUserDao) IsExist(id int) bool {
-	if _, err := rud.getUserById(id); err != nil {
-		return false
-	}
-
-	return true
-}
-
-func (rud *RedisUserDao) getUserById(id int) (user *userinfo.User, err error) {
+func (rud *RedisUserDao) GetUserByID(id int) (user *userinfo.User, err error) {
 	// 通过给定的id 去redis查询用户
 	res, err := cache.RedisHGetStr("users", id)
 	fmt.Println(res, err)
@@ -142,4 +63,15 @@ func (rud *RedisUserDao) getUserById(id int) (user *userinfo.User, err error) {
 		return
 	}
 	return
+}
+
+func (rud *RedisUserDao) Delete(id int, pwd string) error {
+	return cache.RedisDel("users", id)
+}
+
+func (rud *RedisUserDao) IsExist(id int) bool {
+	if _, err := rud.GetUserByID(id); err != nil {
+		return false
+	}
+	return true
 }

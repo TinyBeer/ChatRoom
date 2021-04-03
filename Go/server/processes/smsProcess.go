@@ -18,7 +18,7 @@ type SmsProcess struct {
 // 擦看并发送离线消息
 func (sp *SmsProcess) SendOfflineMessage(userID int, conn net.Conn) (err error) {
 	// 获取离线留言
-	dataSlice, mesErr := dao.MyUserDao.WithdrawOfflineMesById(userID)
+	dataSlice, mesErr := dao.MySmsDao.WithdrawByID(userID)
 	if mesErr != nil {
 		log.Println("WithdrawOfflineMesById failed, err=", mesErr.Error())
 		return
@@ -95,9 +95,9 @@ func (sp *SmsProcess) SendMessage(mes *message.Message) (err error) {
 		sp.SendMesToEachOnlineUser(&sendMes, up.Conn)
 	} else {
 		// 4.2 不在线 转存消息
-		err = dao.MyUserDao.DepositUserOfflineMesById(messageMes.ToUserID, []byte(mes.Data))
+		err = dao.MySmsDao.DepositeByID(messageMes.ToUserID, mes.Data)
 		if err != nil {
-			log.Println("DepositUserOfflineMesById failed, err=", err.Error())
+			log.Println("DepositeByID failed, err=", err.Error())
 			return
 		}
 	}

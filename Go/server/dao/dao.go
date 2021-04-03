@@ -11,11 +11,22 @@ var (
 	ERROR_USER_PWD      = errors.New("密码不正确")
 )
 
+// 服务器启动后初始化一个全局的UserDao
+var (
+	MyUserDao = &RedisUserDao{}
+	MySmsDao  = &RedisSmsDao{}
+)
+
 type IUserDao interface {
-	Signup(int, string, string) error
-	Signin(int, string) (*userinfo.User, error)
-	// Signout(int, string) error
-	Delete(int, string) error
-	getUserById(int) (*userinfo.User, error)
-	IsExist(int) error
+	Insert(int, string, string) error        // 添加用户
+	Delete(int, string) error                // 删除用户  需要提供ID和密码
+	GetUserByID(int) (*userinfo.User, error) // 根据ID获取用户
+	IsExist(int) bool                        // 查看用户是否存在
+
+	Update() // 更新用户信息
+}
+
+type ISmsDao interface {
+	Deposite()
+	Withdraw()
 }

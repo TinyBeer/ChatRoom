@@ -23,7 +23,9 @@ func InitPool(addr string, port int, maxIdle, maxActive int, idleTimeout time.Du
 			return redis.Dial("tcp", address)
 		},
 	}
-	fmt.Println(redisPool.Get().Do("ping"))
+	if _, err := redisPool.Get().Do("ping"); err != nil {
+		panic(err)
+	}
 }
 
 func RedisDel(args ...interface{}) error {
@@ -51,7 +53,7 @@ func RedisLpush(args ...interface{}) error {
 	// 延时关闭连接
 	defer conn.Close()
 
-	_, err := conn.Do("lpsh", args...)
+	_, err := conn.Do("lpush", args...)
 	return err
 
 }

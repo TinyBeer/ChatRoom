@@ -5,6 +5,8 @@ import (
 	"ChatRoom/Go/common/utils"
 	"ChatRoom/Go/server/dao"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"encoding/json"
 	"fmt"
 	"log"
@@ -139,7 +141,13 @@ func (up *UserProcess) ServerProccessRegister(mes *message.Message) (err error) 
 	var registerResMes message.RegisterResMes
 
 	// 进行注册
-	err = dao.MyUserDao.Signup(registerMes.UserID, registerMes.UserPwd, registerMes.UserName)
+	// 用户id加密
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(registerMes.UserPwd), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("用户密码加密失败，err:", err)
+		return err
+	}
+	err = dao.MyUserDao.Insert(registerMes.UserID, string(hashedPassword), registerMes.UserName)
 	if err != nil {
 		switch err {
 		case dao.ERROR_USER_EXIST:
@@ -189,7 +197,14 @@ func (up *UserProcess) ServerProcessLogin(mes *message.Message) (err error) {
 	// 到redis数据库进行验证
 	switch loginMes.AutenticationType {
 	case message.PasswordType:
-		user, err := dao.MyUserDao.Signin(loginMes.UserID, loginMes.UserPwd)
+		// 登录验证
+		user, err := dao.MyUserDao.GetUserByID(loginMes.UserID)
+		if err == nil {
+			if err = bcrypt.CompareHashAndPassword([]byte(user.UserPwd), []byte(loginMes.UserPwd)); err != nil {
+				err = dao.ERROR_USER_PWD
+			}
+		}
+
 		if err != nil {
 			switch err {
 			case dao.ERROR_USER_NOTEXIST:
