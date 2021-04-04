@@ -71,6 +71,9 @@ func (ppro *PreProcessor) serverProcess(mes *message.Message) (servicType int, e
 		// 处理注册消息
 		err = up.ServerProccessRegister(mes)
 		return
+	case message.CheckMesType:
+		err = up.ServerProcessCheck(mes)
+		return
 	default:
 		// 消息类型不是注册或者登录
 		err = errors.New("不可处理的消息类型")

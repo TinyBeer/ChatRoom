@@ -20,6 +20,65 @@ type UserProcess struct {
 	UserID int
 }
 
+func (up *UserProcess) ServerProcessCheck(mes *message.Message) error {
+	// 1.先取出mes.Data，并反序列化
+	var checkMes message.CheckMes
+	err := message.Unpack(mes, &checkMes)
+	if err != nil {
+		return err
+	}
+
+	var resMes message.Message
+	resMes.Type = message.CheckResMesType
+	var checkResMes message.CheckResMes
+
+	// 2.比对数据库
+	user, err := dao.MyUserDao.GetUserByID(checkMes.UserID)
+	if err == nil {
+		if err = bcrypt.CompareHashAndPassword([]byte(user.UserPwd), []byte(checkMes.UserPwd)); err != nil {
+			err = dao.ERR_USER_PWD
+		}
+	}
+
+	if err != nil {
+		switch err {
+		case dao.ERR_USER_NOTEXIST:
+			checkResMes.Code = 500 // 500 用户不存在
+			checkResMes.Error = err.Error()
+		case dao.ERR_USER_PWD:
+			checkResMes.Code = 403 // 403 密码不正确
+			checkResMes.Error = err.Error()
+		default:
+			checkResMes.Code = 505 // 505 服务器内部错误
+			checkResMes.Error = "服务器内部错误"
+			fmt.Println(err)
+		}
+	} else {
+		checkResMes.Code = 200
+		checkResMes.UserName = user.UserName
+	}
+
+	// 3.返回结果
+	// 封包
+	err = message.Pack(&resMes, &checkResMes)
+	if err != nil {
+		log.Println("Pack failed, err=", err)
+		return err
+	}
+	fmt.Println(resMes)
+
+	// 序列化
+	data, err := json.Marshal(&resMes)
+	if err != nil {
+		return err
+	}
+
+	// 使用Transfer返回resMes
+	tf := utils.NewTransfer(up.Conn)
+	tf.WriteData(data)
+	return nil
+}
+
 // 处理登录mes
 func (up *UserProcess) ServerProcessLogout(mes *message.Message) (err error) {
 	// 1.先取出mes.Data，并反序列化

@@ -24,15 +24,18 @@ func Config() {
 }
 
 func main() {
-	// 初始化配置
+	// 导入配置
 	Config()
 
-	fmt.Println("服务器启动...")
 	// 初始化Dao功能
 	dao.Init(viper.GetInt("server.mode"))
 
-	// fmt.Println("服务器[新结构]在8889端口监听...")
+	fmt.Println("服务器启动...")
+	Run()
+}
 
+func Run() {
+	// fmt.Println("服务器[新结构]在8889端口监听...")
 	listen, err := net.Listen("tcp", ":"+viper.GetString("server.port"))
 	if err != nil {
 		fmt.Println("net.Listen failed, err=", err)

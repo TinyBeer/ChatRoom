@@ -18,7 +18,7 @@ func (rud *RedisUserDao) Update() {
 func (rud *RedisUserDao) Insert(id int, pwd string, name string) error {
 	_, err := rud.GetUserByID(id)
 	if err != ERR_USER_NOTEXIST {
-		return err
+		return ERR_USER_EXIST
 	}
 
 	user := userinfo.User{
@@ -45,7 +45,6 @@ func (rud *RedisUserDao) Insert(id int, pwd string, name string) error {
 func (rud *RedisUserDao) GetUserByID(id int) (user *userinfo.User, err error) {
 	// 通过给定的id 去redis查询用户
 	res, err := cache.RedisHGetStr("users", id)
-	fmt.Println(res, err)
 	if err != nil {
 		// 发生错误
 		if err == cache.ErrNil {
@@ -54,7 +53,6 @@ func (rud *RedisUserDao) GetUserByID(id int) (user *userinfo.User, err error) {
 		}
 		return nil, err
 	}
-	// fmt.Println(res)
 	user = &userinfo.User{}
 	// 无错误  将res反序列化为User实例
 	err = json.Unmarshal([]byte(res), user)

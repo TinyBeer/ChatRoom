@@ -28,6 +28,10 @@ var (
 	MessageMesType = "MessageMes"
 	// MessageResMes 留言结果
 	MessageResMesType = "MessageResMes"
+	// CheckMes
+	CheckMesType = "CheckMes"
+	// CheckResMes
+	CheckResMesType = "CheckResMes"
 )
 
 // 登录方式
@@ -40,6 +44,18 @@ var (
 type Message struct {
 	Type string `json:"type"` // 消息类型
 	Data string `json:"data"` // 消息体
+}
+
+// CheckMes :验证消息
+type CheckMes struct {
+	userinfo.AuthenticationUserInfo
+}
+
+// CheckResMes : 验证返回消息
+type CheckResMes struct {
+	Code int `json:"code"` // 状态码
+	userinfo.PersonalUserInfo
+	Error string `json:"error"` // 返回错误信息
 }
 
 // LoginMes :登录消息
